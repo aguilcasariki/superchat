@@ -15,11 +15,13 @@ import { useRef, useState } from "react";
 import {
   addDoc,
   collection,
+  DocumentData,
   getFirestore,
   limit,
   orderBy,
   query,
 } from "firebase/firestore";
+import { Options } from "react-firebase-hooks/firestore/dist/firestore/types";
 
 // Initialize Firebase app
 const firebaseConfig = {
@@ -55,14 +57,14 @@ export default function App() {
 
 const ChatRoom = () => {
   const messageRef = collection(firestore, "messages");
-  const dummy = useRef();
+  const dummy = useRef<HTMLDivElement>(null);
   const q = query(messageRef, orderBy("createdAt"), limit(25));
-  const [messages] = useCollectionData(q, { idField: "id" });
+  const [messages] = useCollectionData(q, { idField: "id" } as Options);
   const [formValue, setFormValue] = useState("");
 
-  const sendMessage = async (e) => {
+  const sendMessage = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
-    const { uid, photoURL } = auth.currentUser;
+    const { uid, photoURL } = auth.currentUser || {};
     const msg = formValue;
     setFormValue("");
 
@@ -72,7 +74,7 @@ const ChatRoom = () => {
       uid,
       photoURL,
     });
-    dummy.current.scrollIntoView({ behavior: "smooth" });
+    dummy.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
@@ -100,7 +102,7 @@ const ChatRoom = () => {
   );
 };
 
-const ChatMessage = ({ message }) => {
+const ChatMessage = ({ message }: { message: DocumentData }) => {
   const { text, uid, photoURL } = message;
   const messageClass =
     uid === auth.currentUser?.uid ? "flex-row-reverse" : "flex-row";
