@@ -1,25 +1,39 @@
-import firebase from "firebase/app";
-import "firebase/auth";
+import { initializeApp } from "firebase/app";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut,
+} from "firebase/auth";
 import { useAuthState } from "react-firebase-hooks/auth";
-import "firebase/firestore";
+
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "./components/ui/avatar";
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import { useRef, useState } from "react";
+import {
+  addDoc,
+  collection,
+  getFirestore,
+  limit,
+  orderBy,
+  query,
+} from "firebase/firestore";
 
 // Initialize Firebase app
-firebase.initializeApp({
-  apiKey: "AIzaSyB3k_PTFFeGgwI8YiJmXn21Q4uvQqG757M",
-  authDomain: "superchat-69c81.firebaseapp.com",
-  projectId: "superchat-69c81",
-  storageBucket: "superchat-69c81.firebasestorage.app",
-  messagingSenderId: "944802448751",
-  appId: "1:944802448751:web:31493c79de0f2749e9149a",
-});
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+};
 
-const auth = firebase.auth();
-const firestore = firebase.firestore();
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const firestore = getFirestore(app);
 
 export default function App() {
   const [user] = useAuthState(auth);
@@ -40,24 +54,25 @@ export default function App() {
 }
 
 const ChatRoom = () => {
-  const messageRef = firestore.collection("messages");
+  const messageRef = collection(firestore, "messages");
   const dummy = useRef();
-  const query = messageRef.orderBy("createdAt").limit(25);
-  const [messages] = useCollectionData(query, { idField: "id" });
+  const q = query(messageRef, orderBy("createdAt"), limit(25));
+  const [messages] = useCollectionData(q, { idField: "id" });
   const [formValue, setFormValue] = useState("");
 
   const sendMessage = async (e) => {
     e.preventDefault();
     const { uid, photoURL } = auth.currentUser;
+    const msg = formValue;
+    setFormValue("");
 
-    await messageRef.add({
-      text: formValue,
+    await addDoc(messageRef, {
+      text: msg,
       createdAt: new Date(),
       uid,
       photoURL,
     });
-    setFormValue("");
-    dummy.current!.scrollIntoView({ behavior: "smooth" });
+    dummy.current.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
@@ -111,8 +126,8 @@ const ChatMessage = ({ message }) => {
 
 const SignIn = () => {
   const signInWithGoogle = () => {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider);
+    const provider = new GoogleAuthProvider();
+    signInWithPopup(auth, provider);
   };
 
   return (
@@ -128,7 +143,7 @@ const SignOut = () => {
   return (
     auth.currentUser && (
       <Button
-        onClick={() => auth.signOut()}
+        onClick={() => signOut(auth)}
         variant="ghost"
         className="text-white hover:text-blue-200"
       >
