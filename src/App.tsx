@@ -23,6 +23,8 @@ import {
 } from "firebase/firestore";
 import { Options } from "react-firebase-hooks/firestore/dist/firestore/types";
 
+console.log(import.meta.env);
+
 // Initialize Firebase app
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -127,9 +129,9 @@ const ChatMessage = ({ message }: { message: DocumentData }) => {
 };
 
 const SignIn = () => {
-  const signInWithGoogle = () => {
+  const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider);
+    await signInWithPopup(auth, provider);
   };
 
   return (
